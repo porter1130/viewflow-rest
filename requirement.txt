@@ -1,0 +1,10 @@
+django
+gunicorn
+mysqlclient
+pycrypto
+djangorestframework
+djangorestframework-jwt
+pygments
+gensim
+django-material
+django-viewflow
