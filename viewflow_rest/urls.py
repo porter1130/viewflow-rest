@@ -17,13 +17,19 @@ from django.conf.urls import url, include
 from django.contrib import admin
 from django.views import generic
 from material.frontend import urls as frontend_urls
+from rest_framework import routers
 
+from core.views import TaskViewSet
 from demo.flows import HelloWorldFlow
 from demo.views import StartView
+
+router = routers.DefaultRouter(trailing_slash=False)
+router.register(r'workflow/tasks', TaskViewSet, base_name='Workflow Tasks')
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^api/workflow/helloworld/start', StartView.as_view(), {'flow_class': HelloWorldFlow}),
+    url(r'^api/', include(router.urls)),
     url(r'^$', generic.RedirectView.as_view(url='/workflow/', permanent=False)),
     url(r'', include(frontend_urls)),
 
