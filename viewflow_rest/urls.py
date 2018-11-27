@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.views import generic
 from material.frontend import urls as frontend_urls
 from rest_framework import routers
+from rest_framework_jwt.views import obtain_jwt_token
 
 from core.views import TaskViewSet
 from demo.flows import HelloWorldFlow
@@ -30,6 +31,7 @@ urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^api/workflow/helloworld/start', StartView.as_view(), {'flow_class': HelloWorldFlow}),
     url(r'^api/', include(router.urls)),
+    url(r'^api/token$', obtain_jwt_token),
     url(r'^$', generic.RedirectView.as_view(url='/workflow/', permanent=False)),
     url(r'', include(frontend_urls)),
 
