@@ -1,51 +1,45 @@
 from django.utils.timezone import now
 from viewflow import signals
-from viewflow.activation import Activation, STATUS, all_leading_canceled
+from viewflow.activation import Activation, STATUS, all_leading_canceled, ViewActivation
 from viewflow.exceptions import FlowRuntimeError
 from viewflow.token import Token
 
 
-class ApprovalActivation(Activation):
+class ApprovalActivation(ViewActivation):
 
     def __init__(self, **kwargs):
         self.next_task = None
         self.tasks = []
-        self._split_count = None
+        self._owner_list = []
         super(ApprovalActivation, self).__init__(**kwargs)
-
-    def calculate_next(self):
-        self._split_count = self.flow_task.task_count_callback(self.process)
-
-    def activate_next(self):
-        pass
 
     @Activation.status.transition(source=STATUS.NEW)
     def assign_tasks(self):
         with self.exception_guard():
             self.task.started = now()
-            self.task.save()
+            self._owner_list = self.flow_task.owner_list
 
-            self.calculate_next()
-
-            self.task.finished = now()
-            self.set_status(STATUS.DONE)
-            self.task.save()
-
-            if self._split_count:
+            if self._owner_list:
                 token_source = Token.split_token_source(self.task.token, self.task.pk)
-                for _ in range(self._split_count):
+                for owner in self._owner_list:
                     task = self.flow_class.task_class(
                         process=self.process,
                         flow_task=self.flow_task,
                         token=next(token_source),
-                        previous=self.task.previous
+                        owner=owner,
+                        status=STATUS.ASSIGNED
                     )
                     task.save()
+
             elif self.flow_task._ifnone_next_node is not None:
                 self.flow_task._ifnone_next_node.activate(prev_activation=self, token=self.task.token)
             else:
                 raise FlowRuntimeError(
                     "{} activated with zero and no IfNone nodes specified".format(self.flow_task.name))
+
+            self.task.finished = now()
+            self.set_status(STATUS.DONE)
+            self.task.save()
 
     @classmethod
     def activate(cls, flow_task, prev_activation, token):
@@ -92,7 +86,7 @@ class ApprovalActivation(Activation):
 
         return not active.exists()
 
-    @Activation.status.transition(source=STATUS.STARTED)
+    @Activation.status.super()
     def done(self):
         """Complete the join within current exception propagation strategy."""
         with self.exception_guard():
@@ -100,13 +94,13 @@ class ApprovalActivation(Activation):
             self.set_status(STATUS.DONE)
             self.task.save()
 
-            #todo:cancel other tasks
+            # todo:cancel other tasks
 
             signals.task_finished.send(sender=self.flow_class, process=self.process, task=self.task)
 
             self.activate_next()
 
-    @Activation.status.transition(source=[STATUS.NEW, STATUS.STARTED])
+    @Activation.status.transition(source=[STATUS.PREPARED])
     def perform(self):
         """Manual gateway activation."""
         if self.is_done():

@@ -22,11 +22,10 @@ class StartView(GenericAPIView):
                 activation = flow_class.start.activation_class()
                 activation.initialize(flow_class.start, None)
 
-                user = User.objects.first()
-                activation.prepare(request.POST or None, user=user)
+                activation.prepare(request.POST or None, user=self.request.user)
                 activation.done()
                 return Response(data=flow_class.process_title)
-            except:
+            except Exception:
                 exc = False
                 if activation.lock:
                     activation.lock.__exit__(*sys.exc_info())

@@ -52,15 +52,13 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
     ),
-    'DEFAULT_PAGINATION_CLASS': 'core.pagination.CustomPagination',
-    'EXCEPTION_HANDLER': 'core.exceptions.custom_exception_handler',
     'PAGE_SIZE': 20
 }
 
 JWT_AUTH = {
     'JWT_SECRET_KEY': SECRET_KEY,
     'JWT_AUTH_HEADER_PREFIX': 'JWT',
-    'JWT_RESPONSE_PAYLOAD_HANDLER': 'user.utils.jwt_response_payload_handler',
+    # 'JWT_RESPONSE_PAYLOAD_HANDLER': 'user.utils.jwt_response_payload_handler',
     'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=7200),
 }
 

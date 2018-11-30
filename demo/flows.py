@@ -1,7 +1,9 @@
+from django.contrib.auth.models import User
 from viewflow import flow, frontend
 from viewflow.base import Flow, this
 from viewflow.flow.views import CreateProcessView, UpdateProcessView
 
+from core.nodes import Approval
 from demo import views
 from demo.models import HelloWorldProcess
 
@@ -17,11 +19,19 @@ class HelloWorldFlow(Flow):
         ).Permission(auto_create=True).Next(this.approve)
     )
 
+    # approve = (
+    #     flow.View(
+    #         UpdateProcessView,
+    #         fields=["approved"]
+    #     ).Assign(owner=User.objects.filter(username='porter').first()).Permission(auto_create=True).Next(this.check_approve)
+    # )
     approve = (
-        flow.View(
-            UpdateProcessView,
+        Approval(
+            view_or_class=UpdateProcessView,
             fields=["approved"]
-        ).Permission(auto_create=True)
+        ).Assign(owner_list=User.objects.filter(username__in=['porter', 'admin']).all()).Permission(
+            auto_create=True).Next(
+            this.check_approve)
     )
 
     check_approve = (
