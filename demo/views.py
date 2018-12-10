@@ -35,7 +35,19 @@ class StartView(GenericAPIView):
                 activation.lock.__exit__(None, None, None)
 
 
-class ApproveView(GenericAPIView):
+class ApprovalView(GenericAPIView):
 
-    def post(self, request, flow_class, flow_task, **kwargs):
-        return Response(data=flow_class.process_title)
+    def post(self, request, *args, **kwargs):
+        task = TaskQuerySet(model=Task).get(pk=self.kwargs.get('task_pk', None))
+        flow_task = task.flow_task
+        flow_class = flow_task.flow_class
+        lock = task.flow_task.flow_class.lock_impl(flow_class.instance)
+        with lock(flow_class, task.process.id):
+            # task = get_object_or_404(flow_task.flow_class.task_class._default_manager, pk=task_pk,
+            #                          process_id=process_pk)
+            activation = flow_task.activation_class()
+            activation.initialize(flow_task, task)
+
+            activation.prepare(request.POST or None)
+            activation.perform()
+

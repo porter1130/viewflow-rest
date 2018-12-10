@@ -22,7 +22,7 @@ from rest_framework_jwt.views import obtain_jwt_token
 
 from core.views import TaskViewSet
 from demo.flows import HelloWorldFlow
-from demo.views import StartView
+from demo.views import StartView, ApprovalView
 
 router = routers.DefaultRouter(trailing_slash=False)
 router.register(r'workflow/tasks', TaskViewSet, base_name='Workflow Tasks')
@@ -30,6 +30,7 @@ router.register(r'workflow/tasks', TaskViewSet, base_name='Workflow Tasks')
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^api/workflow/helloworld/start', StartView.as_view(), {'flow_class': HelloWorldFlow}),
+    url(r'^api/workflow/approval/(?P<task_pk>\d+)$', ApprovalView.as_view()),
     url(r'^api/', include(router.urls)),
     url(r'^api/token$', obtain_jwt_token),
     url(r'^$', generic.RedirectView.as_view(url='/workflow/', permanent=False)),

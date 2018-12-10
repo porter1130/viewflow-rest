@@ -23,13 +23,13 @@ class HelloWorldFlow(Flow):
     #     flow.View(
     #         UpdateProcessView,
     #         fields=["approved"]
-    #     ).Assign(owner=User.objects.filter(username='porter').first()).Permission(auto_create=True).Next(this.check_approve)
+    #     ).Assign(owner=User.objects.filter(username__in=['porter']).first()).Permission(auto_create=True).Next(this.check_approve)
     # )
     approve = (
         Approval(
             view_or_class=UpdateProcessView,
             fields=["approved"]
-        ).Assign(owner_list=User.objects.filter(username__in=['porter', 'admin']).all()).Permission(
+        ).Assign(owner_list=User.objects.filter(username__in=['porter', 'admin', 'wjc']).all()).Permission(
             auto_create=True).Next(
             this.check_approve)
     )
