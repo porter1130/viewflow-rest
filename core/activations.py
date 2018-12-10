@@ -55,45 +55,50 @@ class ApprovalActivation(ViewActivation):
 
         Join node would continue execution if all incoming tasks are DONE or CANCELED.
         """
-        if not self.flow_task._wait_all:
-            return True
+        result = False
 
-        join_prefixes = set(
-            prev.token.get_common_split_prefix(self.task.token, prev.pk)
-            for prev in self.task.previous.exclude(status=STATUS.CANCELED).all())
+        token = self.task.token
 
-        if len(join_prefixes) > 1:
-            raise FlowRuntimeError('Multiple tokens {} came to join {}'.format(join_prefixes, self.flow_task.name))
+        if self.task.token.is_split_token():
+            token = token.get_base_split_token()
 
-        join_token_prefix = next(iter(join_prefixes))
+            join_prefixes = set(
+                prev.token.get_common_split_prefix(token, prev.pk)
+                for prev in self.task.previous.exclude(status=STATUS.CANCELED).all())
 
-        active = self.flow_class.task_class._default_manager \
-            .filter(process=self.process, token__startswith=join_token_prefix) \
-            .exclude(status__in=[STATUS.DONE, STATUS.CANCELED])
+            if len(join_prefixes) > 1:
+                raise FlowRuntimeError(
+                    'Multiple tokens {} came to join {}'.format(join_prefixes, self.flow_task.name))
 
-        return not active.exists()
+            join_token_prefix = next(iter(join_prefixes))
+
+            active_tasks = self.flow_class.task_class._default_manager \
+                .filter(process=self.process, token__startswith=join_token_prefix) \
+                .exclude(status__in=[STATUS.DONE, STATUS.CANCELED])
+
+            if not self.flow_task._wait_all:
+                result = True
+                # cancel other tasks
+                for active_task in active_tasks:
+                    active_task.set_status(STATUS.CANCELED)
+                    active_task.save()
+            else:
+                result = not active_tasks.exists()
+
+        return result
 
     @Activation.status.super()
     def done(self):
         """Complete the join within current exception propagation strategy."""
         with self.exception_guard():
-
-
-            # todo:cancel other tasks
-
             self.task.finished = now()
             self.set_status(STATUS.DONE)
             self.task.save()
 
             signals.task_finished.send(sender=self.flow_class, process=self.process, task=self.task)
 
-            self.activate_next()
-
-    @Activation.status.transition(source=[STATUS.PREPARED])
-    def perform(self):
-        """Manual gateway activation."""
-        if self.is_done():
-            self.done.original()
+            if self.is_done():
+                self.activate_next()
 
     @Activation.status.super()
     def prepare(self, data=None, user=None):

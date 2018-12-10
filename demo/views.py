@@ -49,5 +49,4 @@ class ApprovalView(GenericAPIView):
             activation.initialize(flow_task, task)
 
             activation.prepare(request.POST or None)
-            activation.perform()
-
+            activation.done()
