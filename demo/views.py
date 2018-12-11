@@ -17,14 +17,14 @@ class StartView(GenericAPIView):
         exc = True
         try:
             try:
-                flow_class = self.kwargs.get('flow_class', None)
+                flow_task = self.kwargs.get('flow_task', None)
                 # process = Process.objects.filter(id=1).first()
-                activation = flow_class.start.activation_class()
-                activation.initialize(flow_class.start, None)
+                activation = flow_task.activation_class()
+                activation.initialize(flow_task, None)
 
                 activation.prepare(request.POST or None, user=self.request.user)
                 activation.done()
-                return Response(data=flow_class.process_title)
+                return Response(data=None)
             except Exception:
                 exc = False
                 if activation.lock:
