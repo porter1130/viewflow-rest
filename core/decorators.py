@@ -4,11 +4,11 @@ from django.db import transaction
 import functools
 
 
-def custom_flow_start_view(view):
+def workflow_start_view(view):
     @transaction.atomic
     @functools.wraps(view)
     def _wrapper(request, flow_task, **kwargs):
-        exec = True
+        exc = True
         try:
             try:
                 activation = flow_task.activation_class()
