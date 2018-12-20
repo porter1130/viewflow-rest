@@ -2,7 +2,7 @@ from django.utils.decorators import method_decorator
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import GenericAPIView
 
-from core.decorators import workflow_start_view
+from core.decorators import workflow_start_view, workflow_view
 
 
 class StartWorkflowMixin(GenericAPIView):
@@ -18,5 +18,21 @@ class StartWorkflowMixin(GenericAPIView):
         #     raise PermissionDenied
         super(StartWorkflowMixin, self).dispatch(request, **kwargs)
         self.activation.prepare(request.POST or None, user=request.user)
-        return self.activation_done()
+        self.activation_done()
+        return self.response
 
+
+class WorkflowMixin(GenericAPIView):
+
+    def activation_done(self):
+        self.activation.done()
+
+    @method_decorator(workflow_view)
+    def dispatch(self, request, **kwargs):
+        self.activation = request.activation
+
+        super(WorkflowMixin, self).dispatch(request, **kwargs)
+
+        self.activation.prepare(request.POST or None, user=request.user)
+        self.activation_done()
+        return self.response

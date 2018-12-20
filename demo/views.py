@@ -10,27 +10,16 @@ from rest_framework.response import Response
 from viewflow.managers import ProcessQuerySet, TaskQuerySet
 from viewflow.models import Process, Task
 
-from core.mixins import StartWorkflowMixin
+from core.mixins import StartWorkflowMixin, WorkflowMixin
 
 
 class StartView(StartWorkflowMixin):
 
     def post(self, request, *args, **kwargs):
-        return Response(data=None)
+        return Response(data='success')
 
 
-class ApprovalView(GenericAPIView):
+class ApprovalView(WorkflowMixin):
 
     def post(self, request, *args, **kwargs):
-        task = TaskQuerySet(model=Task).get(pk=self.kwargs.get('task_pk', None))
-        flow_task = task.flow_task
-        flow_class = flow_task.flow_class
-        lock = task.flow_task.flow_class.lock_impl(flow_class.instance)
-        with lock(flow_class, task.process.id):
-            # task = get_object_or_404(flow_task.flow_class.task_class._default_manager, pk=task_pk,
-            #                          process_id=process_pk)
-            activation = flow_task.activation_class()
-            activation.initialize(flow_task, task)
-
-            activation.prepare(request.POST or None)
-            activation.done()
+        return Response(data=None)
