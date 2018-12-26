@@ -6,6 +6,7 @@ from viewflow.flow.views import CreateProcessView, UpdateProcessView
 from core.nodes import Approval
 from demo import views
 from demo.models import HelloWorldProcess
+from demo.views import ApprovalView, StartView
 
 
 @frontend.register
@@ -14,7 +15,7 @@ class HelloWorldFlow(Flow):
 
     start = (
         flow.Start(
-            CreateProcessView,
+            StartView,
             fields=["text"]
         ).Permission(auto_create=True).Next(this.approve)
     )
@@ -27,8 +28,9 @@ class HelloWorldFlow(Flow):
     # )
     approve = (
         Approval(
-            view_or_class=UpdateProcessView,
-            fields=["approved"]
+            view_or_class=ApprovalView,
+            fields=["approved"],
+            wait_all=False
         ).Assign(owner_list=User.objects.filter(username__in=['porter', 'admin', 'wjc']).all()).Permission(
             auto_create=True).Next(
             this.check_approve)
@@ -37,13 +39,22 @@ class HelloWorldFlow(Flow):
     check_approve = (
         flow.If(lambda activation: activation.process.approved)
             .Then(this.send)
-            .Else(this.end)
+            .Else(this.approve2)
     )
 
     send = (
         flow.Handler(
             this.send_hello_world_request
         ).Next(this.end)
+    )
+
+    approve2 = (
+        Approval(
+            view_or_class=ApprovalView,
+            fields=["approved"]
+        ).Assign(owner_list=User.objects.filter(username__in=['porter', 'admin', 'wjc']).all()).Permission(
+            auto_create=True).Next(
+            this.end)
     )
 
     end = flow.End()

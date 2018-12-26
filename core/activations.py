@@ -80,7 +80,7 @@ class ApprovalActivation(ViewActivation):
                 result = True
                 # cancel other tasks
                 for active_task in active_tasks:
-                    active_task.set_status(STATUS.CANCELED)
+                    active_task.status = STATUS.CANCELED
                     active_task.save()
             else:
                 result = not active_tasks.exists()

@@ -29,8 +29,7 @@ router.register(r'workflow/tasks', TaskViewSet, base_name='Workflow Tasks')
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    url(r'^api/workflow/helloworld/start', StartView.as_view(), {'flow_task': HelloWorldFlow.start}),
-    url(r'^api/workflow/approval/(?P<task_pk>\d+)$', ApprovalView.as_view()),
+    url(r'^api/demo/', include('demo.urls')),
     url(r'^api/', include(router.urls)),
     url(r'^api/token$', obtain_jwt_token),
     url(r'^$', generic.RedirectView.as_view(url='/workflow/', permanent=False)),
