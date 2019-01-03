@@ -19,3 +19,17 @@ class TaskViewSet(GenericViewSet, mixins.ListModelMixin):
         if status_list is not None:
             queryset = queryset.filter(status__in=status_list)
         return queryset
+
+
+class WithdrawTasksView(GenericAPIView, mixins.ListModelMixin):
+    serializer_class = serializers.TaskSerializer
+
+    def get_queryset(self):
+        withdrawable_tasks = []
+        process_id = self.request.query_params.get('processId', None)
+        tasks = Task.objects.filter(process__id=process_id, flow_task_type='HUMAN')
+        for task in tasks:
+            if withdrawable_tasks.
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, args, kwargs)

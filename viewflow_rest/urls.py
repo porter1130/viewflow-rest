@@ -34,5 +34,6 @@ urlpatterns = [
     url(r'^api/token$', obtain_jwt_token),
     url(r'^$', generic.RedirectView.as_view(url='/workflow/', permanent=False)),
     url(r'', include(frontend_urls)),
+    url(r'^api/workflow/tasks/withdraw$',)
 
 ]
