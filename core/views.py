@@ -25,11 +25,15 @@ class WithdrawTasksView(GenericAPIView, mixins.ListModelMixin):
     serializer_class = serializers.TaskSerializer
 
     def get_queryset(self):
-        withdrawable_tasks = []
+        withdrawable_task_nodes = []
         process_id = self.request.query_params.get('processId', None)
         tasks = Task.objects.filter(process__id=process_id, flow_task_type='HUMAN')
         for task in tasks:
-            if withdrawable_tasks.
+            if task.status == 'DONE':
+                if not any(filter(lambda x: x.flow_task == task.flow_task, withdrawable_task_nodes)):
+                    withdrawable_task_nodes.append(task.flow_task)
+
+        return tasks
 
     def get(self, request, *args, **kwargs):
         return self.list(request, args, kwargs)
