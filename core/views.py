@@ -30,8 +30,8 @@ class WithdrawTasksView(GenericAPIView, mixins.ListModelMixin):
         tasks = Task.objects.filter(process__id=process_id, flow_task_type='HUMAN')
         for task in tasks:
             if task.status == 'DONE':
-                if not any(filter(lambda x: x.flow_task == task.flow_task, withdrawable_task_nodes)):
-                    withdrawable_task_nodes.append(task.flow_task)
+                if not any(filter(lambda x: x == task.flow_task.name, withdrawable_task_nodes)):
+                    withdrawable_task_nodes.append(task.flow_task.name)
 
         return tasks
 
