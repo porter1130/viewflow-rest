@@ -15,8 +15,7 @@ class HelloWorldFlow(Flow):
 
     start = (
         flow.Start(
-            StartView,
-            fields=["text"]
+            StartView
         ).Permission(auto_create=True).Next(this.approve)
     )
 
@@ -29,8 +28,8 @@ class HelloWorldFlow(Flow):
     approve = (
         Approval(
             view_or_class=ApprovalView,
-            fields=["approved"],
-            wait_all=False
+            wait_all=False,
+            task_title='审批'
         ).Assign(owner_list=User.objects.filter(username__in=['porter', 'admin', 'wjc']).all()).Permission(
             auto_create=True).Next(
             this.check_approve)
@@ -51,7 +50,7 @@ class HelloWorldFlow(Flow):
     approve2 = (
         Approval(
             view_or_class=ApprovalView,
-            fields=["approved"]
+            task_title='审批2'
         ).Assign(owner_list=User.objects.filter(username__in=['porter', 'admin', 'wjc']).all()).Permission(
             auto_create=True).Next(
             this.end)

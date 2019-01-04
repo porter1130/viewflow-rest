@@ -7,12 +7,22 @@ from viewflow.token import Token
 
 
 class ApprovalActivation(ViewActivation):
+    prev_task = None
 
     def __init__(self, **kwargs):
         self.next_task = None
         self.tasks = []
         self._owner_list = []
         super(ApprovalActivation, self).__init__(**kwargs)
+
+    def redirect(self):
+        self.flow_class.task_class._default_manager \
+            .filter(process=self.process,) \
+            .exclude(status__in=[STATUS.DONE, STATUS.CANCELED])
+
+        if self.prev_task:
+            self.flow_task.activate(prev_activation=self.pre_task.flow_task.activation_class(),
+                                    token=self.prev_task.token)
 
     def assign_tasks(self):
         with self.exception_guard():

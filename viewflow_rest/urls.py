@@ -20,7 +20,7 @@ from material.frontend import urls as frontend_urls
 from rest_framework import routers
 from rest_framework_jwt.views import obtain_jwt_token
 
-from core.views import TaskViewSet, WithdrawTasksView
+from core.views import TaskViewSet, WithdrawNodesView
 from demo.flows import HelloWorldFlow
 from demo.views import StartView, ApprovalView
 
@@ -34,6 +34,6 @@ urlpatterns = [
     url(r'^api/token$', obtain_jwt_token),
     url(r'^$', generic.RedirectView.as_view(url='/workflow/', permanent=False)),
     url(r'', include(frontend_urls)),
-    url(r'^api/workflow/tasks/withdraw$', WithdrawTasksView.as_view())
+    url(r'^api/workflow/tasks/withdraw$', WithdrawNodesView.as_view())
 
 ]

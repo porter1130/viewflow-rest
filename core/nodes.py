@@ -7,10 +7,12 @@ from viewflow.flow import views
 from viewflow.nodes.view import BaseView
 from viewflow.utils import is_owner
 
+from core.actions import RedirectTaskView
 from core.activations import ApprovalActivation
+from core.mixins import RedirectViewMixin
 
 
-class Approval(mixins.PermissionMixin, BaseView):
+class Approval(mixins.PermissionMixin, BaseView, RedirectViewMixin):
     task_type = 'HUMAN'
     activation_class = ApprovalActivation
 
@@ -20,6 +22,7 @@ class Approval(mixins.PermissionMixin, BaseView):
     undo_view_class = views.UndoTaskView
     assign_view_class = views.AssignTaskView
     unassign_view_class = views.UnassignTaskView
+    redirect_view_class = RedirectTaskView
 
     def __init__(self, wait_all=True, **kwargs):
 
