@@ -13,6 +13,8 @@ from demo.views import ApprovalView, StartView
 class HelloWorldFlow(Flow):
     process_class = HelloWorldProcess
 
+    flow_id = 2
+
     start = (
         flow.Start(
             StartView

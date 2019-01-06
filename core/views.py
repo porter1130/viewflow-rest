@@ -17,7 +17,8 @@ class TaskViewSet(GenericViewSet, mixins.ListModelMixin):
 
     def get_queryset(self):
         status_list = self.request.query_params.getlist('status', None)
-        queryset = Task.objects.filter(owner=self.request.user, flow_task_type='HUMAN')
+        task_type = self.request.query_params.get('task_type', 'HUMAN')
+        queryset = Task.objects.filter(owner=self.request.user, flow_task_type=task_type)
         if status_list is not None:
             queryset = queryset.filter(status__in=status_list)
         return queryset
