@@ -43,6 +43,21 @@ class WorkflowMixin(GenericAPIView):
         return self.response
 
 
+class WorkflowActionMixin(GenericAPIView):
+
+    def perform(self):
+        self.activation.perform()
+
+    @method_decorator(flow_view)
+    def dispatch(self, request, **kwargs):
+        self.activation = request.activation
+
+        super(WorkflowActionMixin, self).dispatch(request, **kwargs)
+
+        self.perform()
+        return self.response
+
+
 class RedirectViewMixin(object):
     redirect_view_class = None
 

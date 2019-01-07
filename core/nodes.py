@@ -12,7 +12,7 @@ from core.activations import ApprovalActivation
 from core.mixins import RedirectViewMixin
 
 
-class Approval(mixins.PermissionMixin, BaseView, RedirectViewMixin):
+class Approval(mixins.PermissionMixin, RedirectViewMixin, BaseView):
     task_type = 'HUMAN'
     activation_class = ApprovalActivation
 

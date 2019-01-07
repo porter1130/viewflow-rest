@@ -9,7 +9,6 @@ from demo.models import HelloWorldProcess
 from demo.views import ApprovalView, StartView
 
 
-@frontend.register
 class HelloWorldFlow(Flow):
     process_class = HelloWorldProcess
 

@@ -1,17 +1,13 @@
-from viewflow.flow.views.actions import BaseTaskActionView
-from viewflow.flow.views.mixins import FlowTaskManagePermissionMixin
+from rest_framework.response import Response
+
+from core.mixins import  WorkflowActionMixin
 
 
-class RedirectTaskView(FlowTaskManagePermissionMixin, BaseTaskActionView):
+class RedirectTaskView(WorkflowActionMixin):
     """Redirect the task."""
 
-    action_name = 'redirect'
-    action_title = _('跳转')
-
-    def can_proceed(self):
-        """Check that node can be undone."""
-        return self.activation.redirect.can_proceed()
+    def post(self, request, *args, **kwargs):
+        return Response(data='success')
 
     def perform(self):
-        """Redirect the node."""
         self.activation.redirect()
