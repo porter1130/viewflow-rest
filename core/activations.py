@@ -1,9 +1,92 @@
 from django.utils import timezone
 from django.utils.timezone import now
-from viewflow import signals
-from viewflow.activation import Activation, STATUS, all_leading_canceled, ViewActivation
+from viewflow import signals, Task
+from viewflow.activation import Activation, STATUS, all_leading_canceled, ViewActivation, StartActivation
 from viewflow.exceptions import FlowRuntimeError
+from viewflow.managers import TaskManager
 from viewflow.token import Token
+
+
+class ManagedStartActivation(StartActivation):
+    """Tracks task statistics in activation form."""
+
+    management_form_class = None
+
+    def __init__(self, **kwargs):  # noqa D102
+        super(ManagedStartActivation, self).__init__(**kwargs)
+        self.management_form = None
+        self.management_form_class = kwargs.pop('management_form_class', None)
+
+    def get_management_form_class(self):
+        """Activation management form class.
+
+        Form used as intermediate storage before GET/POST task requests.
+        """
+        if self.management_form_class:
+            return self.management_form_class
+        else:
+            return self.flow_class.management_form_class
+
+    @Activation.status.transition(source=[STATUS.NEW, STATUS.ASSIGNED], target=STATUS.PREPARED)
+    def prepare(self, data=None, user=None):
+        """Prepare activation for execution."""
+        super(ManagedStartActivation, self).prepare.original()
+        self.task.owner = user
+
+        management_form_class = self.get_management_form_class()
+        self.management_form = management_form_class(data=data, instance=self.task)
+
+        if data:
+            if not self.management_form.is_valid():
+                raise FlowRuntimeError('Activation metadata is broken {}'.format(self.management_form.errors))
+            self.task = self.management_form.save(commit=False)
+
+    @Activation.status.transition(source=STATUS.PREPARED, target=STATUS.DONE)
+    def redo(self):
+        signals.task_started.send(sender=self.flow_class, process=self.process, task=self.task)
+
+        self.task.finished = now()
+        self.task.save()
+
+        signals.task_finished.send(sender=self.flow_class, process=self.process, task=self.task)
+
+        self.activate_next()
+
+    @classmethod
+    def create_task(cls, flow_task, prev_activation, token):
+        """Create a task instance."""
+        return flow_task.flow_class.task_class(
+            process=prev_activation.process,
+            flow_task=flow_task,
+            token=token)
+
+    @classmethod
+    def activate(cls, flow_task, prev_activation, token):
+        """Instantiate new task."""
+        task = cls.create_task(flow_task, prev_activation, token)
+        start_task = flow_task.flow_class.task_class._default_manager.filter(process=task.process,
+                                                                             flow_task_type='START').first()
+        task.owner = start_task.owner
+        task.status = STATUS.ASSIGNED
+
+        task.save()
+        task.previous.add(prev_activation.task)
+
+        activation = cls()
+        activation.initialize(flow_task, task)
+
+        return activation
+
+    def redirect(self):
+        active_tasks = self.flow_class.task_class._default_manager \
+            .filter(process=self.process, status=STATUS.ASSIGNED)
+        for active_task in active_tasks:
+            active_task.status = STATUS.CANCELED
+            active_task.save()
+
+        if self.task:
+            self.flow_task.activate(prev_activation=self,
+                                    token=self.task.token)
 
 
 class ApprovalActivation(ViewActivation):

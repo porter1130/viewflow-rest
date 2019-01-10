@@ -53,7 +53,7 @@ class WorkflowActionMixin(GenericAPIView):
         self.activation = request.activation
 
         super(WorkflowActionMixin, self).dispatch(request, **kwargs)
-
+        self.activation.prepare(request.POST or None, user=request.user)
         self.perform()
         return self.response
 

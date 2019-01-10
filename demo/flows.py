@@ -3,10 +3,10 @@ from viewflow import flow, frontend
 from viewflow.base import Flow, this
 from viewflow.flow.views import CreateProcessView, UpdateProcessView
 
-from core.nodes import Approval
+from core.nodes import Approval, Start
 from demo import views
 from demo.models import HelloWorldProcess
-from demo.views import ApprovalView, StartView
+from demo.views import ApprovalView, StartView, DraftView
 
 
 class HelloWorldFlow(Flow):
@@ -15,9 +15,15 @@ class HelloWorldFlow(Flow):
     flow_id = 2
 
     start = (
-        flow.Start(
+        Start(
             StartView
-        ).Permission(auto_create=True).Next(this.approve)
+        ).Permission(auto_create=True).Next(this.check_start)
+    )
+
+    check_start = (
+        flow.If(lambda activation: activation.process.is_terminate)
+            .Then(this.end)
+            .Else(this.approve)
     )
 
     # approve = (

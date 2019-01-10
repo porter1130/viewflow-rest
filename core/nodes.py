@@ -2,14 +2,35 @@ from copy import copy
 
 from django.conf.urls import url
 from django.urls import reverse
-from viewflow import mixins, Gateway, STATUS
+from viewflow import mixins, Gateway, STATUS, nodes
 from viewflow.flow import views
 from viewflow.nodes.view import BaseView
 from viewflow.utils import is_owner
 
-from core.actions import RedirectTaskView
-from core.activations import ApprovalActivation
+from core.actions import RedirectTaskView, RedoTaskView
+from core.activations import ApprovalActivation, ManagedStartActivation
 from core.mixins import RedirectViewMixin
+
+
+class Start(RedirectViewMixin, nodes.Start):
+    activate_next_view_class = views.ActivateNextTaskView
+    cancel_view_class = views.CancelTaskView
+    detail_view_class = views.DetailTaskView
+    undo_view_class = views.UndoTaskView
+    start_view_class = views.CreateProcessView
+    redirect_view_class = RedirectTaskView
+    redo_view_class = RedoTaskView
+
+    activation_class = ManagedStartActivation
+
+    def urls(self):
+        """Add `/<process_pk>/<task_pk>/` url."""
+        urls = super(Start, self).urls()
+        urls.append(
+            url(r'^(?P<process_pk>\d+)/{}/(?P<task_pk>\d+)/$'.format(self.name),
+                self.redo_view_class.as_view(), {'flow_task': self}, name=self.name)
+        )
+        return urls
 
 
 class Approval(mixins.PermissionMixin, RedirectViewMixin, BaseView):

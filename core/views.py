@@ -32,7 +32,7 @@ class WithdrawNodesView(GenericAPIView, mixins.ListModelMixin):
         task_id = self.request.query_params.get('taskId', None)
 
         withdrawable_nodes = []
-        tasks = Task.objects.filter(process__id=process_id, flow_task_type='HUMAN').order_by('id')
+        tasks = Task.objects.filter(process__id=process_id, flow_task_type__in=['START', 'HUMAN']).order_by('id')
         current_task = tasks.get(pk=task_id)
 
         for task in tasks:
