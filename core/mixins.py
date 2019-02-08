@@ -45,6 +45,10 @@ class WorkflowMixin(GenericAPIView):
 
 class WorkflowActionMixin(GenericAPIView):
 
+    def save_approval_history(self):
+        # todo: save approval history
+        pass
+
     def perform(self):
         self.activation.perform()
 
@@ -53,6 +57,7 @@ class WorkflowActionMixin(GenericAPIView):
         self.activation = request.activation
 
         super(WorkflowActionMixin, self).dispatch(request, **kwargs)
+        self.save_approval_history()
         self.activation.prepare(request.POST or None, user=request.user)
         self.perform()
         return self.response
