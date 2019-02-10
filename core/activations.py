@@ -81,7 +81,10 @@ class ManagedStartActivation(StartActivation):
         active_tasks = self.flow_class.task_class._default_manager \
             .filter(process=self.process, status=STATUS.ASSIGNED)
         for active_task in active_tasks:
-            active_task.status = STATUS.CANCELED
+            if self.task.id == active_task.id:
+                active_task.status = STATUS.DONE
+            else:
+                active_task.status = STATUS.CANCELED
             active_task.save()
 
         if self.task:
@@ -101,7 +104,10 @@ class ApprovalActivation(ViewActivation):
         active_tasks = self.flow_class.task_class._default_manager \
             .filter(process=self.process, status=STATUS.ASSIGNED)
         for active_task in active_tasks:
-            active_task.status = STATUS.CANCELED
+            if self.task.id == active_task.id:
+                active_task.status = STATUS.DONE
+            else:
+                active_task.status = STATUS.CANCELED
             active_task.save()
 
         if self.task:
