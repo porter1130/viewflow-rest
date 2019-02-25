@@ -2,7 +2,7 @@ from copy import copy
 
 from django.conf.urls import url
 from django.urls import reverse
-from viewflow import mixins, Gateway, STATUS, nodes
+from viewflow import mixins, Gateway, STATUS, nodes, ThisObject
 from viewflow.flow import views
 from viewflow.nodes.view import BaseView
 from viewflow.utils import is_owner
@@ -69,6 +69,11 @@ class Approval(mixins.PermissionMixin, RedirectViewMixin, BaseView):
         else:
             result.owner_list = owner_kwargs
         return result
+
+    def ready(self):
+        """Resolve internal `this`-references."""
+        if isinstance(self.owner_list, ThisObject):
+            self.owner_list = getattr(self.flow_class.instance, self.owner_list.name)
 
     @property
     def assign_view(self):

@@ -116,7 +116,7 @@ class ApprovalActivation(ViewActivation):
 
     def assign_tasks(self):
         with self.exception_guard():
-            self._owner_list = self.flow_task.owner_list
+            self._owner_list = self.flow_task.owner_list(self)
 
             if self._owner_list:
                 token_source = Token.split_token_source(self.task.token, self.task.pk)

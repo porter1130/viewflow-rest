@@ -37,7 +37,7 @@ class HelloWorldFlow(Flow):
             view_or_class=ApprovalView,
             wait_all=False,
             task_title='审批'
-        ).Assign(owner_list=User.objects.filter(username__in=['porter', 'admin', 'wjc']).all()).Permission(
+        ).Assign(owner_list=this.get_approve_user).Permission(
             auto_create=True).Next(
             this.check_approve)
     )
@@ -67,3 +67,6 @@ class HelloWorldFlow(Flow):
 
     def send_hello_world_request(self, activation):
         print(activation.process.text)
+        
+    def get_approve_user(self,activation):
+        return User.objects.filter(username__in=['porter', 'admin', 'wjc']).all()
