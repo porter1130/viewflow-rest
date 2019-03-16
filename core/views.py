@@ -34,9 +34,19 @@ class WithdrawNodesView(GenericAPIView, mixins.ListModelMixin):
         withdrawable_nodes = []
         tasks = Task.objects.filter(process__id=process_id, flow_task_type__in=['START', 'HUMAN']).order_by('id')
         current_task = tasks.get(pk=task_id)
+        pre_flow_nodes = []
+        if current_task:
+            flow_nodes = current_task.flow_process.flow_class._meta._nodes_by_name
+            for key in flow_nodes:
+                if current_task.flow_task.name == key:
+                    break
+                else:
+                    pre_flow_nodes.append(key)
 
         for task in tasks:
-            if task.status == STATUS.DONE and task.flow_task.name != current_task.flow_task.name:
+            if task.status == STATUS.DONE \
+                    and task.flow_task.name in pre_flow_nodes \
+                    and task.flow_task.name != current_task.flow_task.name:
                 if not any(filter(lambda x: x.name == task.flow_task.name, withdrawable_nodes)):
                     withdrawable_nodes.append(
                         Node(name=task.flow_task.name, title=task.flow_task.task_title))
